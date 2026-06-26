@@ -21,6 +21,10 @@ namespace Console.DomainObjectVSValueObject
     /* Imports from NET Framework */
     using System;
 
+    using DDD_Demo;
+
+    using DDDFW;
+
     public class Program
     {
         public Program()
@@ -31,13 +35,8 @@ namespace Console.DomainObjectVSValueObject
 
         private static void Main(string[] args)
         {
-            CMenu unterMenu = new CMenu("Untermenü");
-            unterMenu.AddItem("Untermenüpunkt 1", () => UnterMenuPoint("A"), "🖥");
-            unterMenu.AddItem("Untermenüpunkt 2", () => UnterMenuPoint("B"), "🔊");
-
-            CMenu mainMenu = new CMenu("Hauptmenü");
-            mainMenu.AddItem("Auswahl Menüpunkt 1", MenuPoint1);
-            mainMenu.AddSubMenu("Einstellungen", unterMenu, "⚙");
+            CMenu mainMenu = new CMenu("DDD Demo");
+            mainMenu.AddItem("DDD Customer", MenuPoint1);
             mainMenu.AddItem("Beenden", () => ApplicationExit());
             mainMenu.Show();
         }
@@ -50,15 +49,66 @@ namespace Console.DomainObjectVSValueObject
         private static void MenuPoint1()
         {
             Console.Clear();
+            var result = Customer.Create(
+                new PersonName("Max", "Mustermann"),
+                new Email("max@test.de"),
+                new Address("Hauptstraße 1", "1010",  "Entenhausen"));
+
+            if (result.Success == false)
+            {
+                return;
+            }
+
+            Customer customer = result.Value!;
+
+            customer.Rename(new PersonName("Max", "Meyer"));
+
+            customer.ChangeEmail(new Email("meyer@test.de"));
+
+            customer.Move(new Address("Bahnhofstraße 5", "68161", "Mannheim"));
+
+            customer.Delete();
+
+            foreach (var domainEvent in customer.DomainEvents)
+            {
+                switch (domainEvent)
+                {
+                    case CustomerCreated e:
+
+                        Console.WriteLine(e.CustomerId);
+
+                        break;
+
+                    case CustomerRenamed e:
+
+                        Console.WriteLine(e.Name.FirstName);
+                        Console.WriteLine(e.Name.LastName);
+
+                        break;
+
+                    case CustomerEmailChanged e:
+
+                        Console.WriteLine(e.Email.Value);
+
+                        break;
+
+                    case CustomerMoved e:
+
+                        Console.WriteLine(e.Address.Street);
+                        Console.WriteLine(e.Address.ZipCode);
+                        Console.WriteLine(e.Address.City);
+
+                        break;
+
+                    case CustomerDeleted e:
+
+                        Console.WriteLine(e.CustomerId);
+
+                        break;
+                }
+            }
 
             Console.Wait();
-        }
-
-        private static void UnterMenuPoint(string param)
-        {
-            Console.Clear();
-
-            Console.Wait(param);
         }
     }
 }
