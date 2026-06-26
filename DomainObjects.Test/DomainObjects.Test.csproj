@@ -1,0 +1,20 @@
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseVSTest>true</UseVSTest>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Id_Test\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Console.DomainObjectVSValueObject\Console.DomainObjectVSValueObject.csproj" />
+  </ItemGroup>
+
+</Project>

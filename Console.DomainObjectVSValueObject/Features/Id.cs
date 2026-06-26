@@ -4,7 +4,7 @@
     using System.Runtime.Serialization;
 
     /// <summary>
-    /// Ein eindeutiger Wert, der zur Identifizierung entweder eines Aggregats oder einer Entität dient
+    /// A unique value used to identify either an aggregate or an entity
     /// </summary>
     public abstract class Id
     {
