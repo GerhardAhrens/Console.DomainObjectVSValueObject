@@ -39,6 +39,7 @@ namespace Console.DomainObjectVSValueObject
             mainMenu.AddItem("DDD Customer", MenuPoint1);
             mainMenu.AddItem("Beenden", () => ApplicationExit());
             mainMenu.Show();
+            
         }
 
         private static void ApplicationExit()
