@@ -2,9 +2,11 @@
 {
     public readonly record struct EntityId<T>(Guid Value)
     {
-        public static EntityId<T> New() => new(Guid.NewGuid());
+        public override string ToString()  => Value.ToString();
 
-        public override string ToString() => Value.ToString();
+        public static implicit operator Guid(EntityId<T> id) => id.Value;
+
+        public static explicit operator EntityId<T>(Guid value) => new(value);
     }
 
     public abstract class Entity<TId> where TId : notnull
@@ -42,5 +44,14 @@
         {
             return !Equals(left, right);
         }
+    }
+
+    public static class EntityId
+    {
+        public static EntityId<T> New<T>() => new(Guid.NewGuid());
+
+        public static EntityId<T> Empty<T>() => new(Guid.Empty);
+
+        public static EntityId<T> Create<T>(Guid value)  => new(value);
     }
 }

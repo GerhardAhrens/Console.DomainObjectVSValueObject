@@ -3,7 +3,7 @@
 
     using DDDFW;
 
-    public sealed class Customer : AggregateRoot<EntityId<Customer>>, IAuditable, ISoftDelete
+    public sealed class Customer : AuditableAggregateRoot<EntityId<Customer>>, IAuditable, ISoftDelete
     {
         public PersonName Name { get; private set; }
 
@@ -13,18 +13,11 @@
 
         public bool Active { get; private set; }
 
-        // IAuditable
-
-        public DateTime CreatedOn { get; internal set; }
-
-        public DateTime? ModifiedOn { get; internal set; }
-
         // ISoftDelete
-
         public bool IsDeleted { get; private set; }
 
         public DateTime? DeletedOn { get; private set; }
-
+        public string DeletedFrom { get; private set; }
         private Customer(EntityId<Customer> id, PersonName name, Email email, Address address) : base(id)
         {
             Name = name;
@@ -36,56 +29,88 @@
 
         public static Result<Customer> Create(PersonName name, Email email, Address address)
         {
-            var customer = new Customer(EntityId<Customer>.New(), name, email, address);
+            var customer = new Customer(EntityId.New<Customer>(), name, email, address);
 
             customer.Raise(new CustomerCreated(customer.Id));
-
+            customer.CreatedOn = DateTime.UtcNow;
+            customer.CreatedFrom = Environment.UserName;
             return Result<Customer>.Ok(customer);
         }
 
-        public Result Rename(PersonName name)
+        public Result Rename(string firstName, string lastName)
         {
-            if (Name == name)
+            var nameResult = PersonName.Create(firstName, lastName);
+
+            if (nameResult.Success == false)
+            {
+                return Result.Fail(nameResult.Errors);
+            }
+
+            if (Name == nameResult.Value)
+            {
                 return Result.Ok();
+            }
 
-            Name = name;
-
-            Raise(new CustomerRenamed(Id, name));
+            Name = nameResult.Value!;
+            base.ModifiedOn = DateTime.UtcNow;
+            base.ModifiedFrom = Environment.UserName;
+            Raise(new CustomerRenamed(Id, Name));
 
             return Result.Ok();
         }
 
-        public Result ChangeEmail(Email email)
+        public Result ChangeEmail(string email)
         {
-            if (Email == email)
+            var emailResult = Email.Create(email);
+            if (emailResult.Success == false)
+            {
+                return Result.Fail(emailResult.Errors);
+            }
+
+            if (Email == emailResult.Value)
+            {
                 return Result.Ok();
+            }
 
-            Email = email;
+            Email = emailResult.Value;
 
-            Raise(new CustomerEmailChanged(Id, email));
+            base.ModifiedOn = DateTime.UtcNow;
+            base.ModifiedFrom = Environment.UserName;
+
+            Raise(new CustomerEmailChanged(Id, Email));
 
             return Result.Ok();
         }
 
-        public Result Move(Address address)
+        public Result Move(string street, string zipCode, string city)
         {
-            if (Address == address)
-                return Result.Ok();
+            var addressResult = Address.Create(street, zipCode, city);
+            if (addressResult.Success == false)
+            {
+                return Result.Fail(addressResult.Errors);
+            }
 
-            Address = address;
+            Address = addressResult.Value;
 
-            Raise(new CustomerMoved(Id, address));
+            base.ModifiedOn = DateTime.UtcNow;
+            base.ModifiedFrom = Environment.UserName;
+
+            Raise(new CustomerMoved(Id, Address));
 
             return Result.Ok();
         }
 
         public Result Delete()
         {
-            if (IsDeleted)
-                return Result.Fail("Customer wurde bereits gelöscht.");
+            if (IsDeleted == true)
+            {
+                return Result.Fail(CustomerErrors.AlreadyDeleted);
+            }
 
             IsDeleted = true;
-            DeletedOn = DateTime.UtcNow;
+
+            this.DeletedOn = DateTime.UtcNow;
+            this.DeletedFrom = Environment.UserName;
 
             Raise(new CustomerDeleted(Id));
 

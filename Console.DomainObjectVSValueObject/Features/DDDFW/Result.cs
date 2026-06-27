@@ -4,34 +4,61 @@
     using System.Collections.Generic;
     using System.Text;
 
+    public sealed record ResultError(string Code, string Message, Exception Exception = null);
+
     public class Result
     {
-        public bool Success { get; }
+        private readonly List<ResultError> _errors = new();
 
-        public string Error { get; }
+        public bool Success => _errors.Count == 0;
 
-        protected Result(bool success, string error)
+        public IReadOnlyCollection<ResultError> Errors
+            => _errors;
+
+        protected Result()
         {
-            Success = success;
-            Error = error;
         }
 
-        public static Result Ok() => new(true, null);
+        protected Result(ResultError error)
+        {
+            _errors.Add(error);
+        }
 
-        public static Result Fail(string error) => new(false, error);
+        protected Result(IEnumerable<ResultError> errors)
+        {
+            _errors.AddRange(errors);
+        }
+
+        public static Result Ok()
+            => new();
+
+        public static Result Fail(ResultError error) => new(error);
+
+        public static Result Fail(IEnumerable<ResultError> errors)  => new(errors);
     }
 
     public sealed class Result<T> : Result
     {
         public T Value { get; }
 
-        private Result(bool success, T value, string error) : base(success, error)
+        private Result(T value)
         {
             Value = value;
         }
 
-        public static Result<T> Ok(T value) => new(true, value, null);
+        private Result(ResultError error) : base(error)
+        {
+        }
 
-        public new static Result<T> Fail(string error) => new(false, default, error);
+        private Result(IEnumerable<ResultError> errors) : base(errors)
+        {
+        }
+
+        public static Result<T> Ok(T value)
+            => new(value);
+
+        public static new Result<T> Fail(ResultError error) => new(error);
+
+        public static new Result<T> Fail(IEnumerable<ResultError> errors) => new(errors);
     }
 }

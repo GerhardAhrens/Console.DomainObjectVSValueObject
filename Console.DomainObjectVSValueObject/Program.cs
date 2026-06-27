@@ -49,60 +49,98 @@ namespace Console.DomainObjectVSValueObject
         private static void MenuPoint1()
         {
             Console.Clear();
-            var result = Customer.Create(
-                new PersonName("Max", "Mustermann"),
-                new Email("max@test.de"),
-                new Address("Hauptstraße 1", "1010",  "Entenhausen"));
 
-            if (result.Success == false)
+            var nameResult = PersonName.Create("Max","Mustermann");
+
+            if (nameResult.Success == false)
             {
                 return;
             }
 
-            Customer customer = result.Value!;
+            var emailResult = Email.Create("max@test.de");
 
-            customer.Rename(new PersonName("Max", "Meyer"));
+            if (emailResult.Success == false)
+            {
+                return;
+            }
 
-            customer.ChangeEmail(new Email("meyer@test.de"));
+            var addressResult = Address.Create("Hauptstraße 1", "1010", "Entenhausen");
 
-            customer.Move(new Address("Bahnhofstraße 5", "68161", "Mannheim"));
+            if (addressResult.Success == false)
+            {
+                return;
+            }
+
+            var customerResult = Customer.Create(
+                nameResult.Value!,
+                emailResult.Value!,
+                addressResult.Value!);
+
+            if (customerResult.Success == false)
+            {
+                return;
+            }
+
+            Customer customer = customerResult.Value!;
+
+
+            customer.Rename("Dagobert", "Duck");
+
+            customer.ChangeEmail("dagobert.duck@entenhausen.eh");
+
+            customer.Move("Talerstrasse 1", "1010", "Entenhausen");
 
             customer.Delete();
+
+            var resultDelete = customer.Delete();
+            if (resultDelete.Success == false)
+            {
+                Console.WriteLine(resultDelete.Errors.FirstOrDefault());
+            }
 
             foreach (var domainEvent in customer.DomainEvents)
             {
                 switch (domainEvent)
                 {
                     case CustomerCreated e:
-
-                        Console.WriteLine(e.CustomerId);
+                        Console.Line();
+                        Console.WriteLine($"Erstellt Customer mit Id: {e.CustomerId}");
 
                         break;
 
                     case CustomerRenamed e:
 
+                        Console.Line();
+                        Console.WriteLine("Rename Person");
                         Console.WriteLine(e.Name.FirstName);
                         Console.WriteLine(e.Name.LastName);
+                        Console.WriteLine(customer.CreatedOn);
 
                         break;
 
                     case CustomerEmailChanged e:
-
+                        Console.Line();
+                        Console.WriteLine("Change Email");
                         Console.WriteLine(e.Email.Value);
+                        Console.WriteLine(customer.ModifiedOn);
 
                         break;
 
                     case CustomerMoved e:
-
+                        Console.Line();
+                        Console.WriteLine("Geändert Adresse");
                         Console.WriteLine(e.Address.Street);
                         Console.WriteLine(e.Address.ZipCode);
                         Console.WriteLine(e.Address.City);
+                        Console.WriteLine(customer.ModifiedOn);
 
                         break;
 
                     case CustomerDeleted e:
-
+                        Console.Line();
+                        Console.WriteLine("Customer gelöscht");
                         Console.WriteLine(e.CustomerId);
+                        Console.WriteLine(customer.ModifiedOn);
 
                         break;
                 }

@@ -233,7 +233,7 @@ Beispiel:
 ```csharp
 public record Money(decimal Amount, string Currency);
 ```
-generiert der Compiler sinngemäß folgenden Code:
+generiert der Compiler automatisch folgenden Code:
 ```csharp
 public override bool Equals(object? obj)
 
@@ -245,6 +245,7 @@ public static bool operator ==(Money? left, Money? right)
 
 public static bool operator !=(Money? left, Money? right)
 ```
+
 ### Der Vergleich
 
 ```csharp
@@ -324,20 +325,170 @@ Der Compiler erzeugt automatisch:
 
 Das erspart viel fehleranfälligen Boilerplate-Code und entspricht genau dem fachlichen Konzept eines Value Objects, bei dem nicht die Identität, sondern ausschließlich die enthaltenen Werte zählen.
 
+### Was erzeugt der Compiler bei einem Record?
+aus
+```csharp
+public record Money(decimal Amount, string Currency);
+```
+entsteht vereinfacht
+```csharp
+public record Money
+{
+    public decimal Amount { get; init; }
+
+    public string Currency { get; init; }
+
+    public override bool Equals(object? obj);
+
+    public virtual bool Equals(Money? other);
+
+    public override int GetHashCode();
+
+    public static bool operator ==(...);
+
+    public static bool operator !=(...);
+
+    public override string ToString();
+}
+```
+Zusätzlich wird ein Deconstruct()-Methode erzeugt, sodass Records auch komfortabel dekonstruiert werden können:
+
+Der Deconstruct() kann aber auch bei einem `record`selbst erstzellt werden.
+
+```csharp
+public record PersonName(string FirstName, string LastName)
+{
+    public void Deconstruct(out string fullName)
+    {
+        fullName = $"{FirstName} {LastName}";
+    }
+}
+```
+Jetzt funktionieren beide Varianten:
+```csharp
+var name = new PersonName("Max", "Mustermann");
+
+var (first, last) = name;
+
+var (fullName) = name;
+```
+
+
 ## Hinweis
 Der Source ist soll auch einfache Art und Weise die Funktionen eines Features zeigen. Der Source ist so geschrieben, das so wenig wie möglich zusätzliche NuGet-Pakete benötigt werden.
 
 ## Beispielsource
 
-> Beschreibung
+Das Beispiel soll die Erstellung als auch die Berbeitung eines Customer Objekt zeigen.
 
+Erstellung der einzelnen Objekt Typen
 ```csharp
+var nameResult = PersonName.Create("Max","Mustermann");
+
+if (nameResult.Success == false)
+{
+    return;
+}
+
+var emailResult = Email.Create("max@test.de");
+
+if (emailResult.Success == false)
+{
+    return;
+}
+
+var addressResult = Address.Create("Hauptstraße 1", "1010", "Entenhausen");
+
+if (addressResult.Success == false)
+{
+    return;
+}
+
 ```
 
-```xml
+Erstellung des Customer Objekt
+```csharp
+var customerResult = Customer.Create(
+    nameResult.Value!,
+    emailResult.Value!,
+    addressResult.Value!);
+
+if (customerResult.Success == false)
+{
+    return;
+}
+
+Customer customer = customerResult.Value!;
 ```
 
-```json
+Bearbeiten des Customer Objekt
+```csharp
+customer.Rename("Dagobert", "Duck");
+
+customer.ChangeEmail("dagobert.duck@entenhausen.eh");
+
+customer.Move("Talerstrasse 1", "1010", "Entenhausen");
+
+customer.Delete();
+
+var resultDelete = customer.Delete();
+if (resultDelete.Success == false)
+{
+    Console.WriteLine(resultDelete.Errors.FirstOrDefault());
+}
+```
+
+Auswerten des Customer Objekt (Insert, Update, Delete)
+Hierzu wird Pattern-Matching verwendet. Es sind aber auch verschiedene andere Varianten denkbar.
+So kann z.B. jedes Objekt ein Event zur Verfügung stellen.
+```csharp
+foreach (var domainEvent in customer.DomainEvents)
+{
+    switch (domainEvent)
+    {
+        case CustomerCreated e:
+            Console.Line();
+            Console.WriteLine($"Erstellt Customer mit Id: {e.CustomerId}");
+
+            break;
+
+        case CustomerRenamed e:
+
+            Console.Line();
+            Console.WriteLine("Rename Person");
+            Console.WriteLine(e.Name.FirstName);
+            Console.WriteLine(e.Name.LastName);
+            Console.WriteLine(customer.CreatedOn);
+
+            break;
+
+        case CustomerEmailChanged e:
+            Console.Line();
+            Console.WriteLine("Change Email");
+            Console.WriteLine(e.Email.Value);
+            Console.WriteLine(customer.ModifiedOn);
+
+            break;
+
+        case CustomerMoved e:
+            Console.Line();
+            Console.WriteLine("Geändert Adresse");
+            Console.WriteLine(e.Address.Street);
+            Console.WriteLine(e.Address.ZipCode);
+            Console.WriteLine(e.Address.City);
+            Console.WriteLine(customer.ModifiedOn);
+
+            break;
+
+        case CustomerDeleted e:
+            Console.Line();
+            Console.WriteLine("Customer gelöscht");
+            Console.WriteLine(e.CustomerId);
+            Console.WriteLine(customer.ModifiedOn);
+
+            break;
+    }
+}
 ```
 
 # Versionshistorie

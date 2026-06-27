@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# CA1000: Statische Member nicht in generischen Typen deklarieren
+dotnet_diagnostic.CA1000.severity = none
+
+# CA1707: Bezeichner dürfen keine Unterstriche enthalten
+dotnet_diagnostic.CA1707.severity = none

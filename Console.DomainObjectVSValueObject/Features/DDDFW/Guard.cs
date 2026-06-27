@@ -1,8 +1,7 @@
 ﻿namespace DDDFW
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
+    using System.Text.RegularExpressions;
 
     public static class Guard
     {
@@ -14,33 +13,45 @@
         public static void NotNullOrWhiteSpace(string value, string parameterName)
         {
             if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException(
-                    $"{parameterName} darf nicht leer sein.",
-                    parameterName);
+            {
+                throw new ArgumentException($"{parameterName} darf nicht leer sein.", parameterName);
+            }
         }
 
         public static void MaxLength(string value, int maxLength, string parameterName)
         {
             if (value.Length > maxLength)
-                throw new ArgumentException(
-                    $"{parameterName} darf maximal {maxLength} Zeichen besitzen.",
-                    parameterName);
+            {
+                throw new ArgumentException($"{parameterName} darf maximal {maxLength} Zeichen besitzen.", parameterName);
+            }
         }
 
         public static void Positive(decimal value, string parameterName)
         {
             if (value <= 0)
-                throw new ArgumentOutOfRangeException(
-                    parameterName,
-                    "Wert muss größer 0 sein.");
+            {
+                throw new ArgumentOutOfRangeException(parameterName, "Wert muss größer 0 sein.");
+            }
         }
 
         public static void Positive(int value, string parameterName)
         {
             if (value <= 0)
-                throw new ArgumentOutOfRangeException(
-                    parameterName,
-                    "Wert muss größer 0 sein.");
+            {
+                throw new ArgumentOutOfRangeException(parameterName, "Wert muss größer 0 sein.");
+            }
+        }
+
+        private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static void Email(string value, string parameterName)
+        {
+            NotNullOrWhiteSpace(value, parameterName);
+
+            if (EmailRegex.IsMatch(value) == false)
+            {
+                throw new ArgumentException("Ungültige E-Mail-Adresse.", parameterName);
+            }
         }
     }
 }
