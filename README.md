@@ -6,7 +6,7 @@
 ![Version](https://img.shields.io/badge/Version-1.0.2026.0-yellow.svg)
 
 ## Projekt 
-Im dem Projekt geht es um das Thema des Unterschied zwischen `Doamin Object` und `Value Object`.
+Im dem Projekt geht es um das Thema des Unterschied zwischen `Domain Object` und `Value Object`.
 
 ##  Domain-Klasse vs Value Object 
 Der Unterschied zwischen einer Domain-Klasse (Entity) und einem Value Object gehört zu den Grundprinzipien des Domain-Driven Design (DDD). Beide repräsentieren fachliche Konzepte, unterscheiden sich aber in ihrer Bedeutung und ihrem Verhalten.
