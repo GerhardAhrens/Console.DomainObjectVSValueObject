@@ -17,7 +17,9 @@
         public bool IsDeleted { get; private set; }
 
         public DateTime? DeletedOn { get; private set; }
+
         public string DeletedFrom { get; private set; }
+
         private Customer(EntityId<Customer> id, PersonName name, Email email, Address address) : base(id)
         {
             Name = name;
