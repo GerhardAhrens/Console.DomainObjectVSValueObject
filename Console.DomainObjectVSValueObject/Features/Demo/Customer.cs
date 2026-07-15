@@ -56,7 +56,7 @@
             Name = nameResult.Value!;
             base.ModifiedOn = DateTime.UtcNow;
             base.ModifiedFrom = Environment.UserName;
-            Raise(new CustomerRenamed(Id, Name));
+            base.Raise(new CustomerRenamed(Id, Name));
 
             return Result.Ok();
         }

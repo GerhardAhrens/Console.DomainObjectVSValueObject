@@ -84,7 +84,6 @@ namespace Console.DomainObjectVSValueObject
 
             Customer customer = customerResult.Value!;
 
-
             customer.Rename("Dagobert", "Duck");
 
             customer.ChangeEmail("dagobert.duck@entenhausen.eh");
